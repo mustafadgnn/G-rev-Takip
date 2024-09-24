@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES6",  //TypeScript'in çıktısını hangi JavaScript sürümüne dönüştüreceğini belirler.
+    "module": "commonjs", //TypeScript modüllerini hangi JavaScript modül formatına dönüştüreceğini belirler.
+    "outDir": "./dist", //Derlenmiş dosyaların çıktı alınacağı dizin      
+    "rootDir": "./src", //typeScript kaynak dosyalarının bulunduğu yerdir.
+    "strict": true, //TypeScript'in katı modda çalışmasını sağlar.  bir tip kontrolü uygular ve olası hataları daha erken fark etmenizi sağlar.
+    "esModuleInterop": true, //TypeScript'in ES modüllerini desteklemesini sağlar.
+    "forceConsistentCasingInFileNames": true //Dosya adlarındaki büyük-küçük harf uyumunu zorunlu hale getirir. 
+  },
+  "include": ["src/**/*"] //TypeScript derleyicisinin derlemesi gereken dosyaları belirler.
+}
