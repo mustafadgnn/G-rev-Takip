@@ -177,9 +177,9 @@
                                             <!-- Görevler Tablosu -->
                                             <div class="content-area table-responsive" id="gorevlerBlock" style="display: none;">
                                                 <h1>Görevler</h1>
-                                                <table id="task-table" class="table table-striped table table-row-dashed align-middle gs-0 gy-3 my-0">
+                                                <table id="task-table" class="table border table-striped gy-7 gs-7">
                                                     <thead>
-                                                        <tr>
+                                                        <tr class="fw-bold fs-6 text-gray-800"></tr>
                                                             <th>ID</th>
                                                             <th>Başlık</th>
                                                             <th>Açıklama</th>
@@ -216,37 +216,62 @@
 
                                             <!-- Görev Güncelle Modalı -->
                                             <div id="task-update-modal" class="modal" style="display:none;">
-                                                <div class="modal-content">
-                                                    <h2>Görevi Güncelle</h2>
-                                                    <form id="task-update-form">
-                                                        <input type="hidden" id="update-task-id">
-                                                        <div class="form-group">
-                                                            <label for="update-task-title">Başlık:</label>
-                                                            <input type="text" id="update-task-title" class="form-control" required>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="update-task-description">Açıklama:</label>
-                                                            <input type="text" id="update-task-description" class="form-control" required>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="update-assigned-to">Atanan Kişi:</label>
-                                                            <select id="update-assigned-to" class="form-control">
-                                                                <option value="">Seçiniz</option>
-                                                                <!-- Kullanıcılar dinamik olarak buraya yüklenecek -->
-                                                            </select>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="update-task-completed">Durum:</label>
-                                                            <select id="update-task-completed" class="form-control">
-                                                                <option value="0">Tamamlanmamış</option>
-                                                                <option value="1">Tamamlanmış</option>
-                                                            </select>
-                                                        </div>
-                                                        <button type="submit" class="btn btn-primary">Görevi Güncelle</button>
-                                                        <button type="button" id="delete-task-btn" class="btn btn-danger">Görevi Sil</button>
-                                                    </form>
+                                    <div class="card card-bordered">
+                                        <!-- Başlık ve toolbar -->
+                                        <div class="card-header">
+                                            <h3 class="card-title">Görevi Güncelle</h3>
+                                            <div class="card-toolbar">
+                                                <button type="button" id="delete-task-btn" class="btn btn-sm btn-danger">
+                                                    Görevi Sil
+                                                </button>
+                                            </div>
+                                        </div>
+                                    
+                                        <!-- Form içerikleri -->
+                                        <div class="card-body">
+                                            <form id="task-update-form">
+                                                <input type="hidden" id="update-task-id">
+                                            
+                                                <!-- Başlık -->
+                                                <div class="form-group mb-3">
+                                                    <label for="update-task-title">Başlık:</label>
+                                                    <input type="text" id="update-task-title" class="form-control" required>
                                                 </div>
-                                            </div>    
+                                            
+                                                <!-- Açıklama -->
+                                                <div class="form-group mb-3">
+                                                    <label for="update-task-description">Açıklama:</label>
+                                                    <input type="text" id="update-task-description" class="form-control" required>
+                                                </div>
+                                            
+                                                <!-- Atanan Kişi -->
+                                                <div class="form-group mb-3">
+                                                    <label for="update-assigned-to">Atanan Kişi:</label>
+                                                    <select id="update-assigned-to" class="form-control">
+                                                        <option value="">Seçiniz</option>
+                                                        <!-- Kullanıcılar dinamik olarak buraya yüklenecek -->
+                                                    </select>
+                                                </div>
+                                            
+                                                <!-- Durum -->
+                                                <div class="form-group mb-3">
+                                                    <label for="update-task-completed">Durum:</label>
+                                                    <select id="update-task-completed" class="form-control">
+                                                        <option value="0">Tamamlanmamış</option>
+                                                        <option value="1">Tamamlanmış</option>
+                                                    </select>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    
+                                        <!-- Alt kısım -->
+                                        <div class="card-footer">
+                                            <button type="submit" form="task-update-form" class="btn btn-primary">Görevi Güncelle</button>
+                                        </div>
+                                        
+                                    </div>
+                                    </div>
+
                                             
                                             
                                         </div>
