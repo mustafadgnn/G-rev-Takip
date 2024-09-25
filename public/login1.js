@@ -1,37 +1,43 @@
-document.getElementById('kt_sign_in_form').addEventListener('submit', function(event) {
+document.getElementById('kt_sign_in_form').addEventListener('submit', async function(event) {
     event.preventDefault(); // Formun varsayılan davranışını durdurur
-    const form = event.target;
-    const nameInput = document.querySelector('#name'); // Veya document.getElementById('name');
-const passwordInput = document.querySelector('#password');
+    const nameInput = document.querySelector('#name').value.trim();
+    const passwordInput = document.querySelector('#password').value.trim();
 
-    const myHeaders = new Headers();
-myHeaders.append("Content-Type", "application/json");
+    if (!nameInput || !passwordInput) {
+        alert('Lütfen tüm alanları doldurun.');
+        return;
+    }
 
-const raw = JSON.stringify({
-  "name": nameInput.value,
-  "password": passwordInput.value
-});
+    const raw = JSON.stringify({
+        name: nameInput,
+        password: passwordInput
+    });
 
+    const requestOptions = {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: raw
+    };
 
-const requestOptions = {
-  method: "POST",
-  headers: myHeaders,
-  body: raw,
-  redirect: "follow"
-};
+    try {
+        const response = await fetch("http://localhost:3000/login", requestOptions);
+        const result = await response.json();
 
-fetch("http://localhost:3000/login", requestOptions)
-  .then((response) => response.text())
-  .then((result) => {
-    console.log(result);
-    const jsonResult = JSON.parse(result);
-    if (jsonResult.login === true) {
-        window.location.href = "/public/dashboard.html"; // Başarılı giriş sonrası yönlendirme
-      } else {
-        alert("Giriş başarısız! Lütfen bilgilerinizi kontrol edin."); // Giriş başarısızsa uyarı ver
-      }
+        if (!response.ok) {
+            alert(result.error || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
+            return;
+        }
 
-
-  })
-  .catch((error) => console.error(error));
+        // JWT token'ı tarayıcıya kaydediyoruz
+        if (result.token) {
+            localStorage.setItem('token', result.token);
+            alert('Başarıyla giriş yapıldı.');
+            window.location.href = "/public/dashboard.html"; // Başarılı giriş sonrası yönlendirme
+        }
+    } catch (error) {
+        console.error('Giriş hatası:', error);
+        alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+    }
 });

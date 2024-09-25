@@ -6,9 +6,20 @@ let tasks = []; // Global görev dizisi
 // Kişileri listeleme fonksiyonu
 async function loadUsers() {
     try {
-        const response = await fetch(USERS_URL);
-        const users = await response.json();
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Token eksik. Lütfen tekrar giriş yapın.');
+        }
 
+        const response = await fetch(USERS_URL, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Kullanıcılar yüklenemedi.');
+
+        const users = await response.json();
         const userList = document.getElementById('user-list');
         if (!userList) {
             console.error('user-list (tablo) elementi bulunamadı!');
@@ -16,13 +27,14 @@ async function loadUsers() {
         }
 
         userList.innerHTML = ''; // Eski verileri temizle
-        document.getElementById('user-table').style.display = 'table'; // Kişiler tablosunu göster
-        document.getElementById('task-table').style.display = 'none'; // Görevler tablosunu gizle
-        document.getElementById('create-task-form').style.display = 'none'; // Görev oluşturma formunu gizle
+        document.getElementById('user-table').style.display = 'table';
+        document.getElementById('task-table').style.display = 'none';
+        document.getElementById('create-task-form').style.display = 'none';
+        document.getElementById('kisilerBlock').style.display = 'block';
+        document.getElementById('gorevlerBlock').style.display = 'none';
 
         users.forEach(user => {
             const row = document.createElement('tr');
-
             const idCell = document.createElement('td');
             idCell.textContent = user.id;
             row.appendChild(idCell);
@@ -41,9 +53,20 @@ async function loadUsers() {
 // Görevleri listeleme fonksiyonu
 async function loadTasks() {
     try {
-        const response = await fetch(TASKS_URL);
-        tasks = await response.json(); // Gelen görevleri global tasks dizisine ata
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Token eksik. Lütfen tekrar giriş yapın.');
+        }
 
+        const response = await fetch(TASKS_URL, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Görevler yüklenemedi.');
+
+        tasks = await response.json();
         const taskList = document.getElementById('task-list');
         if (!taskList) {
             console.error('task-list (tablo) elementi bulunamadı!');
@@ -51,9 +74,11 @@ async function loadTasks() {
         }
 
         taskList.innerHTML = ''; // Eski verileri temizle
-        document.getElementById('task-table').style.display = 'table'; // Görevler tablosunu göster
-        document.getElementById('user-table').style.display = 'none'; // Kişiler tablosunu gizle
-        document.getElementById('create-task-form').style.display = 'none'; // Görev oluşturma formunu gizle
+        document.getElementById('task-table').style.display = 'table';
+        document.getElementById('user-table').style.display = 'none';
+        document.getElementById('create-task-form').style.display = 'none';
+        document.getElementById('kisilerBlock').style.display = 'none';
+        document.getElementById('gorevlerBlock').style.display = 'block';
 
         tasks.forEach(task => {
             const row = document.createElement('tr');
@@ -72,14 +97,12 @@ async function loadTasks() {
             row.appendChild(descCell);
 
             const completedCell = document.createElement('td');
-            completedCell.textContent = task.completed == 1 ? 'Tamamlanmış' : 'Tamamlanmamış';
-            if (task.completed == 1) {
-                completedCell.style.color = 'red'; // Tamamlanmış görevlerin durumu kırmızı
-            }
+            completedCell.textContent = task.completed ? 'Tamamlanmış' : 'Tamamlanmamış';
+            completedCell.style.color = task.completed ? 'red' : 'black'; // Duruma göre renk
             row.appendChild(completedCell);
 
             const assignedCell = document.createElement('td');
-            assignedCell.textContent = task.assigned_user_name ? task.assigned_user_name : 'Atanmamış';
+            assignedCell.textContent = task.assigned_user_name || 'Atanmamış';
             row.appendChild(assignedCell);
 
             taskList.appendChild(row);
@@ -89,14 +112,143 @@ async function loadTasks() {
     }
 }
 
-// Kişiler butonuna tıklayınca kullanıcıları yükle
-document.querySelector('a[href="#kisiler"]').addEventListener('click', function(event) {
+// Diğer fonksiyonlar burada devam ediyor...
+document.getElementById('task-form').addEventListener('submit', function(event) {
+    event.preventDefault(); // Form gönderimini engelle
+    createTask(); // Görev oluşturma fonksiyonunu çağır
+});
+document.getElementById('delete-task-btn').addEventListener('click', function(event) {
+    deleteTask(); // Görev silme fonksiyonunu çağır
+});
+// Görev oluşturma fonksiyonu
+// Görev oluşturma fonksiyonu
+async function createTask() {
+    const title = document.getElementById('task-title').value.trim();
+    const description = document.getElementById('task-description').value.trim();
+    const assignedTo = document.getElementById('assigned-to').value;
+
+    if (!title || !description) {
+        alert('Lütfen başlık ve açıklamayı doldurun.');
+        return;
+    }
+
+    const taskData = {
+        title: title,
+        description: description,
+        assigned_to: assignedTo || null
+    };
+
+    try {
+        const response = await fetch(TASKS_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(taskData)
+        });
+
+        if (!response.ok) throw new Error('Görev oluşturulamadı.');
+
+        alert('Görev başarıyla oluşturuldu.');
+        document.getElementById('task-form').reset();
+        document.getElementById('create-task-form').style.display = 'none'; // Formu gizle
+        loadTasks(); // Görev listesini yenile
+    } catch (error) {
+        console.error('Görev oluşturulurken bir hata oluştu:', error.message);
+        alert(error.message);
+    }
+}
+
+// Görev oluştur butonuna tıklayınca formu gösterme
+document.getElementById('create-task-btn').addEventListener('click', function() {
+    document.getElementById('create-task-form').style.display = 'block'; // Formu göster
+        document.getElementById('task-table').style.display = 'none'; // Görev tablosunu gizle
+        document.getElementById('user-table').style.display = 'none'; // Kişi tablosunu gizle        
+        document.getElementById('kisilerBlock').style.display = 'none';
+        document.getElementById('gorevlerBlock').style.display = 'none';
+        
+        loadUsersForAssignment(); // Kullanıcıları yükle
+});
+document.getElementById('task-update-form').addEventListener('submit', function(event) {
+    event.preventDefault(); // Form gönderimini engelle
+    updateTask(); // Görev güncelleme fonksiyonunu çağır
+});
+
+// Görev güncelleme fonksiyonu
+async function updateTask() {
+    const id = document.getElementById('update-task-id').value;
+    const title = document.getElementById('update-task-title').value.trim();
+    const description = document.getElementById('update-task-description').value.trim();
+    const assignedTo = document.getElementById('update-assigned-to').value;
+    const completed = document.getElementById('update-task-completed').value;
+
+    if (!title || !description) {
+        alert('Lütfen başlık ve açıklamayı doldurun.');
+        return;
+    }
+
+    const taskData = {
+        title: title,
+        description: description,
+        assigned_to: assignedTo || null,
+        completed: completed
+    };
+
+    try {
+        const response = await fetch(`${TASKS_URL}/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(taskData)
+        });
+
+        if (!response.ok) throw new Error('Görev güncellenemedi.');
+
+        alert('Görev başarıyla güncellendi.');
+        document.getElementById('task-update-modal').style.display = 'none'; // Modalı kapat
+        loadTasks(); // Görev listesini yenile
+    } catch (error) {
+        console.error('Görev güncellenirken bir hata oluştu:', error.message);
+        alert(error.message);
+    }
+}
+
+// Görev silme fonksiyonu
+async function deleteTask() {
+    const id = document.getElementById('update-task-id').value;
+
+    try {
+        const response = await fetch(`${TASKS_URL}/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Görev silinemedi.');
+
+        alert('Görev başarıyla silindi.');
+        document.getElementById('task-update-modal').style.display = 'none'; // Modalı kapat
+        loadTasks(); // Görev listesini yenile
+    } catch (error) {
+        console.error('Görev silinirken bir hata oluştu:', error.message);
+        alert(error.message);
+    }
+}
+
+
+
+
+// Kişiler ve Görevler butonlarına tıklayınca listeleme
+document.getElementById('kisilerMenuButton').addEventListener('click', function(event) {
     event.preventDefault();
     loadUsers();
 });
 
-// Görevler butonuna tıklayınca görevleri yükle
-document.querySelector('a[href="#gorevler"]').addEventListener('click', function(event) {
+document.getElementById('gorevlerMenuButton').addEventListener('click', function(event) {
     event.preventDefault();
     loadTasks();
 });
@@ -110,7 +262,7 @@ document.getElementById('task-list').addEventListener('dblclick', function(event
     if (task) {
         document.getElementById('update-task-title').value = task.title;
         document.getElementById('update-task-description').value = task.description;
-        document.getElementById('update-task-completed').checked = task.completed == 1;
+        document.getElementById('update-task-completed').value = task.completed ? 1 : 0;
         document.getElementById('update-task-id').value = task.id;
         document.getElementById('update-assigned-to').value = task.assigned_to || '';
 
@@ -122,35 +274,20 @@ document.getElementById('task-list').addEventListener('dblclick', function(event
         console.error('Görev bulunamadı:', taskId);
     }
 });
-
-// Görev oluşturma ve kullanıcı atama fonksiyonları
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('create-task-btn').addEventListener('click', function() {
-        document.getElementById('create-task-form').style.display = 'block'; // Formu göster
-        document.getElementById('task-table').style.display = 'none'; // Görev tablosunu gizle
-        document.getElementById('user-table').style.display = 'none'; // Kişi tablosunu gizle
-        loadUsersForAssignment(); // Kullanıcıları yükle
-    });
-
-    document.getElementById('task-form').addEventListener('submit', function(event) {
-        event.preventDefault(); // Form gönderimini engelle
-        createTask(); // Görev oluşturma fonksiyonunu çağır
-    });
-
-    document.getElementById('task-update-form').addEventListener('submit', function(event) {
-        event.preventDefault(); // Form gönderimini engelle
-        updateTask(); // Görev güncelleme fonksiyonunu çağır
-    });
-
-    document.getElementById('delete-task-btn').addEventListener('click', function(event) {
-        deleteTask(); // Görev silme fonksiyonunu çağır
-    });
-});
-
 // Atanacak kullanıcıları yükleme fonksiyonu
 async function loadUsersForAssignment(selectedUserId = null) {
   try {
-      const response = await fetch(USERS_URL);
+      const token = localStorage.getItem('token');
+      if (!token) {
+          throw new Error('Token eksik. Lütfen tekrar giriş yapın.');
+      }
+
+      const response = await fetch(USERS_URL, {
+          headers: {
+              'Authorization': `Bearer ${token}`
+          }
+      });
+
       const users = await response.json();
       const select = document.getElementById('assigned-to');
       const updateSelect = document.getElementById('update-assigned-to');
@@ -176,96 +313,4 @@ async function loadUsersForAssignment(selectedUserId = null) {
   } catch (error) {
       console.error('Kullanıcılar yüklenirken bir hata oluştu:', error);
   }
-}
-// Görev oluşturma fonksiyonu
-async function createTask() {
-    const title = document.getElementById('task-title').value.trim();
-    const description = document.getElementById('task-description').value.trim();
-    const assignedTo = document.getElementById('assigned-to').value;
-
-    const taskData = {
-        title: title,
-        description: description,
-        assigned_to: assignedTo || null
-    };
-
-    try {
-        const response = await fetch(TASKS_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(taskData)
-        });
-
-        if (!response.ok) throw new Error('Görev oluşturulamadı.');
-
-        alert('Görev başarıyla oluşturuldu.');
-        document.getElementById('task-form').reset();
-        document.getElementById('create-task-form').style.display = 'none'; // Formu gizle
-        loadTasks(); // Görev listesini yenile
-    } catch (error) {
-        console.error('Görev oluştururken bir hata oluştu:', error.message);
-        alert(error.message);
-    }
-}
-
-// Görev güncelleme fonksiyonu
-async function updateTask() {
-  const id = document.getElementById('update-task-id').value;
-  const title = document.getElementById('update-task-title').value.trim();
-  const description = document.getElementById('update-task-description').value.trim();
-  const assignedTo = document.getElementById('update-assigned-to').value;
-  
-  // Tamamlanma durumu checkbox'tan geliyor
-  const completed = document.getElementById('update-task-completed').checked ? 1 : 0;
-
-  const taskData = {
-      title: title,
-      description: description,
-      assigned_to: assignedTo || null,
-      completed: completed // Bu completed değeri gönderiliyor
-  };
-
-  try {
-      const response = await fetch(`${TASKS_URL}/${id}`, {
-          method: 'PUT',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(taskData)
-      });
-
-      if (!response.ok) throw new Error('Görev güncellenemedi.');
-
-      alert('Görev başarıyla güncellendi.');
-      document.getElementById('task-update-modal').style.display = 'none'; // Modalı kapat
-      loadTasks(); // Görev listesini yenile
-  } catch (error) {
-      console.error('Görev güncellenirken bir hata oluştu:', error.message);
-      alert(error.message);
-  }
-}
-
-
-
-
-// Görev silme fonksiyonu
-async function deleteTask() {
-    const id = document.getElementById('update-task-id').value;
-
-    try {
-        const response = await fetch(`${TASKS_URL}/${id}`, {
-            method: 'DELETE'
-        });
-
-        if (!response.ok) throw new Error('Görev silinemedi.');
-
-        alert('Görev başarıyla silindi.');
-        document.getElementById('task-update-modal').style.display = 'none'; // Modalı kapat
-        loadTasks(); // Görev listesini yenile
-    } catch (error) {
-        console.error('Görev silinirken bir hata oluştu:', error.message);
-        alert(error.message);
-    }
 }
