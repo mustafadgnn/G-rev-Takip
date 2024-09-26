@@ -1,4 +1,4 @@
-document.getElementById('kt_sign_in_form').addEventListener('submit', async function(event) {
+document.getElementById('kt_sign_in_submit_giris').addEventListener('click', async function(event) {
     event.preventDefault(); // Formun varsayılan davranışını durdurur
     const nameInput = document.querySelector('#name').value.trim();
     const passwordInput = document.querySelector('#password').value.trim();
